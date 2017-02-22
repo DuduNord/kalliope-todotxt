@@ -1,0 +1,30 @@
+---
+  - name: "Get-all-tasks"
+    signals:
+      - order: "Récupère ma liste de taches"
+    neuron:
+      - todotxt:
+          todotxt_file = "path/to/file/todo.txt"
+      - template: "templates/fr_todotxt.j2"
+
+  - name: "Get-grossery-items"
+    signals:
+      - order: "récupère ma liste de course"
+    neuron:
+      - todotxt:
+          todotxt_file = "path/to/file/todo.txt"
+          project: "grossery"
+      - template: "templates/fr_todotxt.j2"
+
+  - name: "Get-specific-items"
+    signals:
+      - order: "récupère ma super liste"
+    neuron:
+      - todotxt:
+          todotxt_file = "path/to/file/todo.txt"
+          project: "projet"
+          priority: "A"
+          context: "contexte"
+          complete: False
+      - template: "templates/fr_todotxt.j2"
+

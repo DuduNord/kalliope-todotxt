@@ -1,0 +1,8 @@
+{% if count > 0 %}
+    Votre listes de taches
+    {% for task in task_list %}
+        {{ task.text  }}
+    {% endfor %}
+{% else %}
+    Vous n'avez pas de taches en attente
+{% endif %}
