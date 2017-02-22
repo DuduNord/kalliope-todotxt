@@ -2,7 +2,7 @@
 
 Interface to todotxt format todolist file.
 
-**WORK IN PROGRESS - NOT STABLE NEURON **
+**WORK IN PROGRESS - NOT STABLE NEURON**
 
 Available:
 * List tasks from file
@@ -15,4 +15,3 @@ Todo
 * Delete tasks
   * by filters (priority, project, context, completeness status)
   * by text
-**
