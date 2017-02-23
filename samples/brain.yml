@@ -28,3 +28,15 @@
           complete: False
       - template: "templates/en_todotxt.j2"
 
+  - name: "add-item-to-shopping-list"
+    signals:
+      - order: "add {{content}} to the shopping list"
+    neurons:
+      - todotxt:
+          action: "add"
+          todotxt_file: "{{todofile}}"
+          project: "grossery"
+          args:
+              - content
+          file_template: "templates/fr_shopping_list.j2"
+

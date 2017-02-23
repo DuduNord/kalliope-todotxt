@@ -1,0 +1,16 @@
+{% if action == "add" %}
+    J'ai ajouté {{ added_task.task  }} à la liste de course                                                                                                                                         
+{% elif action == "get" %}
+    {% if count > 0 %}
+        Votre listes de courses est la suivante:
+        {% for task in task_list %}
+            {{ task.text  }}
+        {% endfor %}
+    {% else %}
+         Vous n'avez rien dans votre liste de course
+     {% endif %}
+{% elif action == "del" %}
+    La suppression n'est pas encore supporté, je suis désolé.
+{% elif action == "send" %}
+    Je ne sais pas vous envoyer votre liste de course pour le moment
+{% endif %}

@@ -8,38 +8,62 @@ logger = logging.getLogger("kalliope")
 
 class Todotxt (NeuronModule):
     def __init__(self, **kwargs):
-        logger.debug("ALLO")
         super(Todotxt, self).__init__(**kwargs)
 
         self.configuration = {
+            'action': kwargs.get('action', None),
             'todotxt_file': kwargs.get('todotxt_file', None),
             'priority': kwargs.get('priority', None),
             'project': kwargs.get('project', None),
             'context': kwargs.get('context', None),
-            'complete': kwargs.get('complete', False)
+            'complete': kwargs.get('complete', False),
+            'content': kwargs.get('content', None)
         }
 
         if self._is_parameters_ok():
-            tasks = self._get_tasks(self._parse_todotxt(self.configuration['todotxt_file']),
+            if self.configuration['action'] == "get":
+                tasks = self._get_tasks(self._parse_todotxt(self.configuration['todotxt_file']),
                                          priority = self.configuration['priority'],
                                          project = self.configuration['project'],
                                          context = self.configuration['context'],
                                          complete = self.configuration['complete'])
 
-            logger.debug("Tasks: %s" % tasks)
-            # self.say(message)
+                logger.debug("Tasks: %s" % tasks)
+                # self.say(message)
 
-            task_list = []
-            for t in tasks:
-                task_list.append({
-                    'text': t.task,
-                    'priority': t.priority,
-                    'complete': t.complete,
-                    'contexts': t.context,
-                    'projects': t.project,
-                })
+                task_list = []
+                for t in tasks:
+                    task_list.append({
+                        'text': t.task,
+                        'priority': t.priority,
+                        'complete': t.complete,
+                        'contexts': t.context,
+                        'projects': t.project,
+                    })
+                self.say({'action': self.configuration['action'], 'task_list': task_list, 'count': len(task_list)})
 
-        self.say({'task_list': task_list, 'count': len(task_list)})
+            elif self.configuration['action'] == "add":
+                task = Task()
+                task.priority = self.configuration['priority']
+                if self.configuration['project'] is not None:
+                    task.project.append(self.configuration['project'])
+                if self.configuration['context'] is not None:
+                    task.context.append(self.configuration['context'])
+                task.complete = self.configuration['complete']
+                task.task = self.configuration['content']
+                logger.debug(task.task)
+                task.encode(task.task)
+                logger.debug(task.raw)
+
+                self._add_task_line(self.configuration['todotxt_file'], task.raw)
+
+                self.say({'action': self.configuration['action'], 'added_task': task})
+
+            elif self.configuration['action'] == "del":
+                pass
+            elif self.configuration['action'] == "send":
+                pass
+
 
     def _is_parameters_ok(self):
         """
@@ -50,8 +74,18 @@ class Todotxt (NeuronModule):
         if self.configuration['todotxt_file'] is None:
             raise MissingParameterException("Todotxt need the todo file")
 
+        if self.configuration['action'] is None:
+            raise MissingParameterException("An action is require")
+
+        if self.configuration['action'] == "add" and self.configuration['content'] is None:
+            raise MissingParameterException("A content is required when the action is add")
+
         return True
 
+    def _add_task_line(self, todofile, line):
+        logger.debug('todofile: %s - line: %s' % (todofile, line))
+        with open(todofile, 'a') as file:
+            file.write(line + "\n")
 
     def _parse_todotxt(self, todofile):
         with open(todofile, 'r') as file:
@@ -168,7 +202,20 @@ class Task (object):
             elif part.startswith('due:'):
                 self.due_date = part[4:]
 
-    def encode(self):
+    def encode(self, content):
         '''Encode the Task object to a raw text line for todo.txt'''
-        pass
+        raw = ""
+        if self.priority:
+            raw += "(" + self.priority + ") "
+
+        raw += self.task + " "
+
+        for c in self.context:
+            logger.debug(c)
+            raw += "@" + c + " "
+
+        for p in self.project:
+            raw += "+" + p + " "
+
+        self.raw = raw
 

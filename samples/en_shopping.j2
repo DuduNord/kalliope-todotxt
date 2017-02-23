@@ -1,0 +1,14 @@
+{% if action == "add" %}
+    I have added {{ added_task.tak }} to the shopping list
+{% elif action == "get" %}
+    {% if count > 0 %}
+        Your shopping list contains:
+        {% for task in task_list %}
+            {{ task.text  }}
+        {% endfor %}
+    {% else %}
+        You don't have anything in the shopping list
+     {% endif %}
+{% elif action == "del" %}
+    La suppression n'est pas encore supporté, je suis désolé.
+{% endif %}
