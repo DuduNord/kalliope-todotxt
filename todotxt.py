@@ -1,5 +1,6 @@
 import logging
 import re
+import os.path
 
 from kalliope.core.NeuronModule import NeuronModule, InvalidParameterException
 
@@ -22,48 +23,82 @@ class Todotxt (NeuronModule):
 
         if self._is_parameters_ok():
             if self.configuration['action'] == "get":
-                tasks = self._get_tasks(self._parse_todotxt(self.configuration['todotxt_file']),
-                                         priority = self.configuration['priority'],
-                                         project = self.configuration['project'],
-                                         context = self.configuration['context'],
-                                         complete = self.configuration['complete'])
-
-                logger.debug("Tasks: %s" % tasks)
-                # self.say(message)
-
-                task_list = []
-                for t in tasks:
-                    task_list.append({
-                        'text': t.task,
-                        'priority': t.priority,
-                        'complete': t.complete,
-                        'contexts': t.context,
-                        'projects': t.project,
-                    })
+                task_list = self._action_get()
                 self.say({'action': self.configuration['action'], 'task_list': task_list, 'count': len(task_list)})
 
             elif self.configuration['action'] == "add":
-                task = Task()
-                task.priority = self.configuration['priority']
-                if self.configuration['project'] is not None:
-                    task.project.append(self.configuration['project'])
-                if self.configuration['context'] is not None:
-                    task.context.append(self.configuration['context'])
-                task.complete = self.configuration['complete']
-                task.task = self.configuration['content']
-                logger.debug(task.task)
-                task.encode(task.task)
-                logger.debug(task.raw)
-
-                self._add_task_line(self.configuration['todotxt_file'], task.raw)
-
+                task = self._action_add()
                 self.say({'action': self.configuration['action'], 'added_task': task})
 
             elif self.configuration['action'] == "del":
+                count = self._action_del()
+                self.say({'action': self.configuration['action'], 'count': count})
+            elif self.configuration['action'] == "update":
                 pass
             elif self.configuration['action'] == "send":
                 pass
 
+
+    def _action_get(self):
+        # Parse file and get list of tasks
+        tasks = self._get_tasks(self._parse_todotxt(self.configuration['todotxt_file']),
+                                priority = self.configuration['priority'],
+                                project = self.configuration['project'],
+                                context = self.configuration['context'],
+                                complete = self.configuration['complete'])
+
+        task_list = []
+        for t in tasks:
+            task_list.append({
+                'text': t.task,
+                'priority': t.priority,
+                'complete': t.complete,
+                'contexts': t.context,
+                'projects': t.project,
+            })
+
+        return task_list
+
+    def _action_add(self):
+        task = Task()
+        task.priority = self.configuration['priority']
+        if self.configuration['project'] is not None:
+            task.project.append(self.configuration['project'])
+        if self.configuration['context'] is not None:
+            task.context.append(self.configuration['context'])
+        task.complete = self.configuration['complete']
+        task.task = self.configuration['content']
+        task.encode(task.task)
+
+        self._add_task_line(self.configuration['todotxt_file'], task.raw)
+
+        return task
+
+    def _action_del(self):
+        tmp_tasks = self._parse_todotxt(self.configuration['todotxt_file'])
+        # Get all task(s)
+        all_tasks = self._get_tasks(tmp_tasks)
+
+        # Get task(s) to delete
+        tasks_to_delete = self._get_tasks(tmp_tasks,
+                                          priority = self.configuration['priority'],
+                                          project = self.configuration['project'],
+                                          context = self.configuration['context'],
+                                          complete = self.configuration['complete'])
+        
+        # Create final list of task to rewrite file
+        count = 0
+        raw_lines = []
+        for t in all_tasks:
+            if t not in tasks_to_delete:
+                raw_lines.append(t.raw)
+            else:
+                count += 1
+
+        # rewrite file
+        self._rewrite_todofile(self.configuration['todotxt_file'], raw_lines)
+
+        return count
 
     def _is_parameters_ok(self):
         """
@@ -71,16 +106,23 @@ class Todotxt (NeuronModule):
         :return: True if parameters are ok, raise an exception otherwise.
         .. raises:: MissingParameterException
         """
-        if self.configuration['todotxt_file'] is None:
-            raise MissingParameterException("Todotxt need the todo file")
+        if self.configuration['todotxt_file'] is None \
+            or os.path.isfile(self.configuration['todotxt_file']) is False:
+            raise InvalidParameterException("Todotxt need a valid and existing todo file")
 
         if self.configuration['action'] is None:
-            raise MissingParameterException("An action is require")
+            raise InvalidParameterException("An action is require")
 
         if self.configuration['action'] == "add" and self.configuration['content'] is None:
-            raise MissingParameterException("A content is required when the action is add")
+            raise InvalidParameterException("A content is required when the action is add")
 
         return True
+ 
+    def _rewrite_todofile(self, todofile, raw_lines):
+        with open(todofile, 'w') as file:
+            for line in raw_lines:
+                file.write(line + "\n")
+        
 
     def _add_task_line(self, todofile, line):
         logger.debug('todofile: %s - line: %s' % (todofile, line))
@@ -95,7 +137,8 @@ class Todotxt (NeuronModule):
         i = 0
         for line in rawfile.splitlines():
             i += 1 # To start task_id a 1
-            tasks.append(Task(i, line))
+            if len(line) > 1:
+                tasks.append(Task(i, line))
 
         return tasks
 
@@ -146,7 +189,7 @@ class Task (object):
         while i < len(parts):
             self.parse(parts[i], i)
             i += 1
-        print(parts, len(parts))
+        #print(parts, len(parts))
 
         tmp = []
         for part in parts:
