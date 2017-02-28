@@ -1,8 +1,11 @@
 {% if count > 0 %}
-    Your grossery list
+    Your list contains:
+
     {% for task in task_list %}
-        {{ task.text  }}
+
+        {{ task.text }}
+
     {% endfor %}
 {% else %}
-    You don't have any task
+    You don't have any item in your list
 {% endif %}
