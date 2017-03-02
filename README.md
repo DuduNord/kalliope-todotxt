@@ -8,7 +8,7 @@ Let you manage todolist via Kalliope. This neuron manage todolist via a a single
 
 More information on [this blog post]() about the reasons of this choice.
 
-Available:
+**Available:**
 * List tasks from file
 * Filter tasks by project, priority, context, completeness status
 * Add tasks
@@ -16,11 +16,14 @@ Available:
 
 Working example in the up to date [sample directory](https://github.com/bacardi55/kalliope-todotxt/tree/master/samples)
 
-Todo
-* Delete tasks by text
+**Todo:**
+* Manage taks update (eg status change)
+* Manage multiple project in orders (Task Class supports it)
+* Manage multiple context in orders (Task Class supports it)
+* Get / Delete task based on search text
 
-Won't do
-* Send tasks (by email): Will use another script linked to kalliope
+**Won't do:**
+* Send tasks (by email): Will use another script linked to kalliope (I'll write about it)
 
 ## Installation
 ```bash
@@ -39,7 +42,7 @@ kalliope install --git-url https://github.com/bacardi55/kalliope-todotxt.git
 | complete     | No       | False   | Boolean: False or True    | If the task is complete or not |
 | content      | No       |         | String                    | The content of the task        |
 
-** Additional notes: **
+**Additional notes:**
 
 * If action is 'add': 
   * Content argument is mandatory
@@ -59,7 +62,7 @@ Only necessary when the neuron use a template to say something
 | count      | The number of returned element      | Integer       | 2                       |
 | added_task | string value                        | Task object¹  | Task object¹            |
 
-** Additional notes: **
+**Additional notes:**
 
 * If action is 'get':
   * Count contains the number of return tasks in tasks_lists 
@@ -194,15 +197,6 @@ This template list tasks if any, or indicate that no tasks are in the list.
 ```
 
 Refer to the return value part of this page to understand what else you can use in the ```task``` object.
-
-## Notes
-
-** TODO list for this neuron **
-
-* Manage taks update (eg status change)
-* Manage multiple project in orders (Task Class supports it)
-* Manage multiple context in orders (Task Class supports it)
-* Get / Delete task based on search text
 
 
 ## Additional links
