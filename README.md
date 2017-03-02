@@ -6,7 +6,7 @@ Interface to todotxt format todolist file.
 
 Let you manage todolist via Kalliope. This neuron manage todolist via a a single text file and follow the [todotxt](http://todotxt.com) rules so it can be used in parallèle with other todotxt compatible applications.
 
-More information on [this blog post]() about the reasons of this choice.
+More information on [this blog post](https://bacardi55.org/en/blog/2017/todotxt-neuron-manage-todolist-compatible-todotxt-format) about the reasons of this choice.
 
 **Available:**
 * List tasks from file
@@ -78,7 +78,7 @@ Only necessary when the neuron use a template to say something
   * task_list is empty
 
 
-** Task Object: ** The task object contains the following properties:
+**Task Object:** The task object contains the following properties:
 
 * Task.raw: the raw line representing the task in the todotxt file.
 * Task.task_id: The task id (number of line)
@@ -201,7 +201,7 @@ Refer to the return value part of this page to understand what else you can use 
 
 ## Additional links
 
-* [A blog post about the todotxt neuron]() - TODO
+* [A blog post about the todotxt neuron](https://bacardi55.org/en/blog/2017/todotxt-neuron-manage-todolist-compatible-todotxt-format)
 * A blog post about how I use this neuron to manage grocery list - TODO
 * [My blog posts about Kalliope](https://bacardi55.org/en/term/kalliope)
 
