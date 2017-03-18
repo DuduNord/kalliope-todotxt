@@ -201,9 +201,9 @@ Refer to the return value part of this page to understand what else you can use 
 
 ## Additional links
 
-* [A blog post about the todotxt neuron](https://bacardi55.org/en/blog/2017/todotxt-neuron-manage-todolist-compatible-todotxt-format)
-* A blog post about how I use this neuron to manage grocery list - TODO
-* [My blog posts about Kalliope](https://bacardi55.org/en/term/kalliope)
+* [A blog post about the todotxt neuron](http://bacardi55.org/2017/02/28/todotxt-a-neuron-to-manage-todolist-compatible-with-todotxt-format.html)
+* [A blog post about how I use this neuron to manage grocery list](http://bacardi55.org/2017/03/16/managing-a-shopping-list-with-kalliope.html)
+* [My blog posts about Kalliope](http://bacardi55.org/kalliope.html)
 
 
 ## Licence
