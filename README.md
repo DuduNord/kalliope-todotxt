@@ -140,8 +140,7 @@ Add item to list
           priority: "A"
           context: "context"
           complete: False
-          args:
-              - content
+          content: "{{content}}"
           say_template: "Task {{added_task.task}} has been added to the super project with priority {{added_task.priority}}"
 ```
 
@@ -156,11 +155,10 @@ You could also add arguments with value coming from voice order directly:
           action: "add"
           todotxt_file: "resources/neurons/todotxt/samples/todo.txt"
           complete: False
-          args:
-              - content
-              - project: "project"
-              - priority: "A"
-              - context: "context"
+          content: "{{content}}"
+          project: "{{project}}"
+          priority: "{{priority}}"
+          context: "{{context}}"
           say_template: "Task {{added_task.task}} has been added to the super project with priority {{added_task.priority}}"
 ```
 
