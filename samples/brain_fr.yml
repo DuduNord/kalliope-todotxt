@@ -41,8 +41,7 @@
           todotxt_file: "resources/neurons/todotxt/samples/todo.txt"
           action: "add"
           project: "grossery"
-          args:
-              - content
+          content: "{{content}}"
           say_template: "Task {{added_task.task}} has been added to the grossery list"
 
 
@@ -57,8 +56,7 @@
           priority: "A"
           context: "context"
           complete: False
-          args:
-              - content
+          content: "{{content}}"
           say_template: "Task {{added_task.task}} has been added to the super project with priority {{added_task.priority}}"
 
 
@@ -71,8 +69,7 @@
           todotxt_file: "resources/neurons/todotxt/samples/todo.txt"
           action: "add"
           project: "other"
-          args:
-              - content
+          content: "{{content}}"
           say_template: "Task {{added_task.task}} has been added to the other project with priority {{added_task.priority}}"
 
   - name: "clear-shopping-list"
