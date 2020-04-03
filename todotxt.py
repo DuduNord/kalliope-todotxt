@@ -18,7 +18,8 @@ class Todotxt (NeuronModule):
             'project': kwargs.get('project', None),
             'context': kwargs.get('context', None),
             'complete': kwargs.get('complete', False),
-            'content': kwargs.get('content', None)
+            'content': kwargs.get('content', None),
+            'due': kwargs.get('due', None)              # due date used instead or created/completion date because created date would imply a completion date from todotxt rules 
         }
 
         if self._is_parameters_ok():
@@ -45,7 +46,8 @@ class Todotxt (NeuronModule):
                                 priority = self.configuration['priority'],
                                 project = self.configuration['project'],
                                 context = self.configuration['context'],
-                                complete = self.configuration['complete'])
+                                complete = self.configuration['complete'],
+                                due = self.configuration['due'])
 
         task_list = []
         for t in tasks:
@@ -53,6 +55,7 @@ class Todotxt (NeuronModule):
                 'text': t.task,
                 'priority': t.priority,
                 'complete': t.complete,
+                'due': t.due,
                 'contexts': t.context,
                 'projects': t.project,
             })
@@ -67,6 +70,7 @@ class Todotxt (NeuronModule):
         if self.configuration['context'] is not None:
             task.context.append(self.configuration['context'])
         task.complete = self.configuration['complete']
+        task.due = self.configuration['due']
         task.task = self.configuration['content']
         task.encode(task.task)
 
@@ -84,6 +88,7 @@ class Todotxt (NeuronModule):
                                           priority = self.configuration['priority'],
                                           project = self.configuration['project'],
                                           context = self.configuration['context'],
+                                          due = self.configuration['due'],
                                           complete = self.configuration['complete'])
         
         # Create final list of task to rewrite file
@@ -142,11 +147,13 @@ class Todotxt (NeuronModule):
 
         return tasks
 
-    def _get_tasks(self, tasks, project = None, context = None, priority = None, complete=None):
+    def _get_tasks(self, tasks, project = None, context = None, priority = None, complete=None, due=None):
         valid_tasks = []
         for t in tasks:
             if (project is None or project in t.project) \
                and (context is None or context in t.context) \
+               and (due is None or due in t.due) \
+               and (priority is None or priority in t.priority) \
                and (complete is None or complete == t.complete):
                valid_tasks.append(t)
 
