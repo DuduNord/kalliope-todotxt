@@ -57,7 +57,7 @@ kalliope install --git-url https://github.com/DuduNord/kalliope-todotxt.git
   * Content argument is mandatory
   * Priority/context/complete/projects will be added in the raw line in text file
 * If action is 'get', adding priority / project / context will filter the results (see brain example below)
-* If action is 'get-passed-due', 'passed_due_days' is mandatory. It will return each task with a due date between today and today+'passed_due_days'. 'passed_due_days' can be positive or negative 
+* If action is 'get-passed-due', 'passed_due_days' is mandatory. It will return each task with a due date between today and today+'passed_due_days'. 'passed_due_days' can be positive or negative. Also I have not been able to test the action 'get-passed-due' function across 2 years. I hope that the function works....
 * If action is 'del', every tasks that match the given priority/project/context will be deleted.
 
 
