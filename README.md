@@ -4,7 +4,10 @@ Interface to todotxt format todolist file.
 
 ## Synopsis
 
-Let you manage todolist via Kalliope. This neuron manage todolist via a a single text file and follow the [todotxt](http://todotxt.com) rules so it can be used in parallèle with other todotxt compatible applications.
+Let you manage todolist via Kalliope. This neuron manage todolist via a a single text file and follow the [todotxt](http://todotxt.com) rules so it can be used in parallèle with other todotxt compatible applications. This code does manage everything by its own, and decode/encode each task in the txt file.
+Make sure to get the file created before launching it as I do not know if it would create by its own.
+This code has few more features than Bacardi one : it is possible to store and get a due date. It is also possible to ask a list of tasks with a due-date between "today" and X days (positive or negative. Also it seems that the Bacardi code can't search a task per priority.
+This code can be used then as a phone book. You can store also a birthday (use due-dateà and you can request which birthday will happen in the next X days. See the complete FR brain in this directory
 
 More information on [this blog post](https://bacardi55.org/en/blog/2017/todotxt-neuron-manage-todolist-compatible-todotxt-format) about the reasons of this choice.
 
@@ -12,35 +15,41 @@ More information on [this blog post](https://bacardi55.org/en/blog/2017/todotxt-
 * List tasks from file
 * Filter tasks by project, priority, context, completeness status
 * Add tasks
+* Get due-date 
 * Delete tasks by filters (priority, project, context, completeness status)
 
-Working example in the up to date [sample directory](https://github.com/bacardi55/kalliope-todotxt/tree/master/samples)
+Working example in the sample directory
 
 **Todo:**
 * Manage taks update (eg status change)
 * Manage multiple project in orders (Task Class supports it)
 * Manage multiple context in orders (Task Class supports it)
-* Get / Delete task based on search text
+* Get / Delete task based on search text (did not try if it can delete based on due date criteria)
 
 **Won't do:**
 * Send tasks (by email): Will use another script linked to kalliope (I'll write about it)
+* manage created/completed date
 
 ## Installation
 ```bash
-kalliope install --git-url https://github.com/bacardi55/kalliope-todotxt.git
+kalliope install --git-url https://github.com/DuduNord/kalliope-todotxt.git
 ```
 
 ## Options
 
-| parameter    | required | default | choices                   | comments                       |
-|--------------|----------|---------|---------------------------|--------------------------------|
-| action       | yes      |         | 'get', 'add' or 'del'     | The action to launch           |
-| todotxt_file | yes      |         | String                    | The path to the todotxt file   |
-| priority     | No       |         | 'A', 'B' or 'C'           | The priority of the task       |
-| project      | No       |         | String                    | The project of the task        |
-| context      | No       |         | String                    | The context of the task        |
-| complete     | No       | False   | Boolean: False or True    | If the task is complete or not |
-| content      | No       |         | String                    | The content of the task        |
+| parameter      | required | default | choices                   | comments                       |
+|----------------|----------|---------|---------------------------|--------------------------------|
+| action         | yes      |         | 'get', 'add', 'get-passed-due' or 'del'| The action to launch           |
+| todotxt_file   | yes      |         | String                    | The path to the todotxt file   |
+| priority       | No       |         | 'A', 'B' or 'C'           | The priority of the task       |
+| project        | No       |         | String                    | The project of the task        |
+| context        | No       |         | String                    | The context of the task        |
+| complete       | No       | False   | Boolean: False or True    | If the task is complete or not |
+| content        | No       |         | String                    | The content of the task        |
+| due_date_year  | No       |         | Number (0000~9999)        | Year of the due date           |
+| due_date_month | No       |         | Number (01~12)            | Month of the due date          |
+| due_date_day   | No       |         | Number (01~31)            | Day of the due date            |
+| passed_due_days| Yes if   |         | Number                    | Delay when ask passed due date |
 
 **Additional notes:**
 
@@ -48,6 +57,7 @@ kalliope install --git-url https://github.com/bacardi55/kalliope-todotxt.git
   * Content argument is mandatory
   * Priority/context/complete/projects will be added in the raw line in text file
 * If action is 'get', adding priority / project / context will filter the results (see brain example below)
+* If action is 'get-passed-due', 'passed_due_days' is mandatory. It will return each task with a due date between today and today+'passed_due_days'. 'passed_due_days' can be positive or negative 
 * If action is 'del', every tasks that match the given priority/project/context will be deleted.
 
 
@@ -89,7 +99,9 @@ Only necessary when the neuron use a template to say something
 * Task.creation_date: Creation date if precised
 * Task.complete: Is the task complete?
 * Task.completion_date: Completion date if completed task
-* Task.due_date: Due date if precised.
+* Task.due_date_year: Due date if precised. Due date is stored in the TXT file with this format "due:YYYY-MM-DD"
+* Task.due_date_month: Due date if precised. Due date is stored in the TXT file with this format "due:YYYY-MM-DD"
+* Task.due_date_day: Due date if precised. Due date is stored in the TXT file with this format "due:YYYY-MM-DD"
 
 You can reuse all these properties in ```template_file``` or ```file_template``` for each task objects (added_task or each element of task_list).
 
@@ -196,6 +208,7 @@ This template list tasks if any, or indicate that no tasks are in the list.
 
 Refer to the return value part of this page to understand what else you can use in the ```task``` object.
 
+Many other example are in this repository for a french phone book
 
 ## Additional links
 
@@ -205,5 +218,3 @@ Refer to the return value part of this page to understand what else you can use 
 
 
 ## Licence
-
-
