@@ -1,0 +1,21 @@
+{% set fix_list = [] %}
+{% set portable_list = [] %}
+
+{% if count > 0 %}
+    {% for task in task_list %}
+        {% if task.priority == "P" %} {{portable_list.append(task.text)}}
+        {% elif task.priority == "F" %} {{fix_list.append(task.text)}}
+        {% endif %}
+    {% endfor %}
+    {%if portable_list|length == 0 %} aucun portable    
+    {%elif portable_list|length == 1 %} le portable    
+    {% else %} les portables
+    {% endif %} {% for item in portable_list %} {{item}} {% endfor %}
+
+    {%if fix_list|length == 0 %} aucun fixe    
+    {%elif fix_list|length == 1 %} un fixe
+    {% else %} les fixes 
+    {% endif %} {% for item in fix_list %} {{item}} {% endfor %}
+{% else %}
+    Il n'y a pas de numéro
+{% endif %}

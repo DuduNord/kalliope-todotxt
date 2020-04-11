@@ -1,0 +1,35 @@
+{% set fix_list = [] %}
+{% set portable_list = [] %}
+{% set anniv_list = [] %}
+{% set add_list = [] %}
+
+{% if count > 0 %}
+    {% for task in task_list %}
+        {% if task.priority == "P" %} {{portable_list.append(task.text)}}
+        {% elif task.priority == "F" %} {{fix_list.append(task.text)}}
+        {% elif task.priority == "A" %} {{add_list.append(task.text)}}
+        {% elif task.priority == "B" %} {{anniv_list.append(task.due_date_day)}} {{anniv_list.append(task.due_date_month | replace("01","janvier") | replace("02","février") | replace("03","mars") | replace("04","avril") | replace("05","mai") | replace("06","juin") | replace("07","juillet") | replace("08","out") | replace("09","septembre") | replace("10","octobre") | replace("11","novembre") | replace("12","décembre"))}} {{anniv_list.append(task.due_date_year)}}
+        {% endif %}
+    {% endfor %}
+    {%if portable_list|length == 0 %} aucun portable    
+    {%elif portable_list|length == 1 %} le portable    
+    {% else %} les portables
+    {% endif %} {% for item in portable_list %} {{item}} {% endfor %}
+
+    {%if fix_list|length == 0 %} aucun fixe    
+    {%elif fix_list|length == 1 %} un fixe
+    {% else %} les fixes 
+    {% endif %} {% for item in fix_list %} {{item}} {% endfor %}
+ 
+    {%if add_list|length == 0 %} aucune addresse    
+    {%elif add_list|length == 1 %} une  addresse
+    {% else %} les addresses
+    {% endif %} {% for item in add_list %} {{item}} {% endfor %}
+
+    {%if anniv_list|length == 0 %} aucun anniversaire    
+    {%elif anniv_list|length == 1 %} un  anniversaire
+    {% else %} les anniversaires
+    {% endif %} {% for item in anniv_list %} {{item}} {% endfor %}
+{% else %}
+    Il n'y a pas d'information
+{% endif %}

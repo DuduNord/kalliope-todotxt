@@ -1,0 +1,12 @@
+{% if count > 0 %}
+    {% if count > 1 %}
+        le numéro appartient à plusieurs personnes
+    {% else %}
+        le numéro appartient à
+    {% endif %}
+    {% for task in task_list %}
+        {{ task.projects }}
+    {% endfor %}
+{% else %}
+    Pas de numéro
+{% endif %}

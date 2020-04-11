@@ -1,0 +1,691 @@
+# recherche de tous les anniversaires dans le mois ?
+# l'ajout d'une date de naissance ne fonctionne pas, car la date complète est prise pour un seul paramètre
+# commande "ajoute la date d'anniversaire 16 décembre 1981 a florian" donne dans la console "replacing brackets from {{add_year}}, using {'add_day': '16 12 1981 a florian', 'person_name': '',"
+# ------------------------- AIDE -------------------------
+  - name: "aide-annuaire"
+    signals:
+      - order: 
+          text: "aide annuaire"
+          matching-type: "strict"
+    neurons:
+      - say:
+          message: "pour avoir un nom, dite, donne-moi la list de l'annuaire. pour un numéro, dite, donne-moi le numéro fixe de Roger, donne-moi le numéro portable de Céline, donne-moi tous les numéros de Simone"
+      - say:
+          message: "pour ajouter une personne, dite, ajouter à l'annuaire et laissez-vous guider. Pour ajouter un numéro à quelqu'un, dite, ajoute un numéro . Et pour supprimer quelqu'un, dite, efface René de l'annuaire."
+# ------------------------- ANNUAIRE ----------------------------------
+# Annuaire fait de 2 listes : une liste annuaire donnant tous les noms dans l'annuaire et une liste pour chaque nom donnant les numéros, le tout pouvant être dans le même fichier
+# PAS LA POSSIBILITE DE CHANGER UN NUMERO EXISTANT
+# action 	      > 'get', 'add' or 'del' 	The action to launch
+# todotxt_file 	> String 	The path to the todotxt file
+# priority 	No  > 'A', 'B' or 'C' 	The priority of the task
+# project 	No  > String 	The project of the task
+# context 	No  > String 	The context of the task
+# complete 	No  > False 	Boolean: False or True 	If the task is complete or not
+# content 	No  > String 	The content of the task
+# ------------------------- STOP ADDING ITEM-------------------------------
+  - name: "stopaddannuaire"
+    signals:
+      - order: "no-order-for-this-synapse"
+    neurons:
+      - say:
+          message: "A votre service"
+
+  - name: "canceladdannuaire"
+    signals:
+      - order: "no-order-for-this-synapse"
+    neurons:
+      - say:
+          message: "fin de l'ajout dans l'annuaire"
+
+# ------------------------- GET INFO --------------
+  - name: "Get-annuaire-list"
+    signals:
+      - order: 
+          text: "donne moi la list de l'annuaire"
+          stt-correction: 
+          - input: "liste"
+            output: "list"
+          - input: "donne-moi"
+            output: "donne moi"
+    neurons:
+      - todotxt:
+          action: "get"
+          todotxt_file: "Annuaire.txt"
+          project: "annuaire"
+          file_template: "templates/fr_todotxt.j2"
+
+  - name: "Get-fixe-num-list"
+    signals:
+      - order: 
+          text: "donne moi le numéro fix de {{content}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "portable"
+          - "tous"
+          - "tout"
+          stt-correction: 
+          - input: "fixe"
+            output: "fix"
+          - input: "donne-moi"
+            output: "donne moi"
+    neurons:
+      - todotxt:
+          action: "get"
+          todotxt_file: "Annuaire.txt"
+          project: "{{content}}"
+          priority: "F"
+          file_template: "templates/fr_annuaire_get_num.j2"
+
+  - name: "Get-cell-num-list"
+    signals:
+      - order: 
+          text: "donne moi le numéro portable de {{content}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "fix"
+          - "fixe"
+          - "tous"
+          - "tout"
+          stt-correction: 
+          - input: "donne-moi"
+            output: "donne moi"
+    neurons:
+      - todotxt:
+          action: "get"
+          todotxt_file: "Annuaire.txt"
+          project: "{{content}}"
+          priority: "P"
+          file_template: "templates/fr_annuaire_get_num.j2"
+
+  - name: "Get-all-num-list"
+    signals:
+      - order: 
+          text: "donne moi tous les numéros de {{content}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "fix"
+          - "fixe"
+          - "portable"
+          stt-correction: 
+          - input: "donne-moi"
+            output: "donne moi"
+    neurons:
+      - todotxt:
+          action: "get"
+          todotxt_file: "Annuaire.txt"
+          project: "{{content}}"
+          file_template: "templates/fr_annuaire_get_all_num.j2"
+
+  - name: "Get-all-info-list"
+    signals:
+      - order: 
+          text: "donne moi toute les info de {{content}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "fix"
+          - "fixe"
+          - "portable"
+          stt-correction: 
+          - input: "donne-moi"
+            output: "donne moi"
+          - input: "toutes"
+            output: "toute"
+          - input: "infos"
+            output: "info"
+          - input: "informations"
+            output: "info"
+          - input: "information"
+            output: "info"
+    neurons:
+      - todotxt:
+          action: "get"
+          todotxt_file: "Annuaire.txt"
+          project: "{{content}}"
+          file_template: "templates/fr_annuaire_get_all_info.j2"
+
+  - name: "Get-address"
+    signals:
+      - order: 
+          text: "donne moi l'adresse de {{content}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "numéro"
+          - "numéros"
+          stt-correction: 
+          - input: "donne-moi"
+            output: "donne moi"
+    neurons:
+      - todotxt:
+          action: "get"
+          todotxt_file: "Annuaire.txt"
+          project: "{{content}}"
+          priority: "A"
+          file_template: "templates/fr_annuaire_get_add.j2"
+
+  - name: "Get-birthday"
+    signals:
+      - order: 
+          text: "donne moi la date d'anniversaire de {{content}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "numéro"
+          - "numéros"
+          - "adresse"
+          stt-correction: 
+          - input: "donne-moi"
+            output: "donne moi"
+    neurons:
+      - todotxt:
+          action: "get"
+          todotxt_file: "Annuaire.txt"
+          project: "{{content}}"
+          priority: "B"
+          file_template: "templates/fr_annuaire_get_birth.j2"
+
+  - name: "search-number-list"            # search a context that looks like a number. Should not find then address or birthdate 
+    signals:
+      - order: 
+          text: "a qui es le numéro {{numbersearch}}"
+          stt-correction: 
+          - input: "appartient"
+            output: "es"
+          - input: "à"
+            output: "a"
+          - input: "est"
+            output: "es"
+          - input: "et"
+            output: "es"
+          - input: "numero"
+            output: "numéro"
+    neurons:
+      - todotxt:
+          action: "get"
+          todotxt_file: "Annuaire.txt"
+          context: "{{numbersearch}}"
+          file_template: "templates/fr_annuaire_search_num.j2"
+
+  - name: "search-birth-month"
+    signals:
+      - order: 
+          text: "quels sont les anniversaires du mois"
+          # stt-correction: 
+          # - input: "à"
+          #   output: "a"
+          # - input: "est"
+          #   output: "es"
+          # - input: "et"
+          #   output: "es"
+          # - input: "numero"
+          #   output: "numéro"
+    neurons:
+      - todotxt:
+          action: "get-passed-due"
+          todotxt_file: "Annuaire.txt"
+          priority: "B"
+          passed_due_days: "30"
+          file_template: "templates/fr_annuaire_get_birth_month.j2"
+      - todotxt:
+          action: "get-passed-due"
+          todotxt_file: "Annuaire.txt"
+          priority: "B"
+          passed_due_days: "-7"
+          file_template: "templates/fr_annuaire_get_birth_month_passed.j2"
+
+# ------------------------- ADD NAME+NUMBER --------------
+  - name: "add-person-to-annuaire"
+    signals:
+      - order: 
+          text: "ajoute a l'annuaire"
+          stt-correction: 
+          - input: "à"
+            output: "a"
+          - input: "ajouter"
+            output: "ajoute"
+    neurons:
+      - say:
+          message: 
+            - "Fixe ou portable ?"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-fix-to-annuaire"
+            answers:
+              - "fix"
+              - "fixe"
+          - synapse: "add-port-to-annuaire"
+            answers:
+              - "portable"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-fix-to-annuaire"
+    signals:
+      - order: "no-order-for-this-synapse"
+    neurons:
+      - say:
+          message: "dite le nom, numéro, et le numéro à enregistrer. exemple, Simone numéro 1 2 3 4 5"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-fix-to-annuaire2"
+            answers:
+              - "{{person_name}} numéro {{add_numero_annuaire}}"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-fix-to-annuaire2" 
+    signals:
+      - order: 
+          text: "ajoute {{person_name}} dans l'annuaire avec son numéro fix {{add_numero_annuaire}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "portable"
+          stt-correction: 
+          - input: "fixe"
+            output: "fix"
+          - input: "de fix"
+            output: "fix"
+          - input: "de fixe"
+            output: "fix"
+    neurons:
+      - todotxt:
+          action: "add"
+          todotxt_file: "Annuaire.txt"
+          project: "{{person_name}}"
+          priority: "F"
+          # complete: False
+          context: "{{add_numero_annuaire}}"
+          content: "{{add_numero_annuaire}}"
+          say_template: "J'ai ajouté le numéro fixe {{added_task.task}}"
+      - todotxt:
+          action: "add"
+          todotxt_file: "Annuaire.txt"
+          project: "annuaire"
+          content: "{{person_name}}"
+          context: "{{person_name}}"
+          say_template: "au contact {{person_name}}"
+
+  - name: "add-port-to-annuaire" 
+    signals:
+      - order: "no-order-for-this-synapse"
+    neurons:
+      - say:
+          message: "dite le nom, numéro, et le numéro à enregistrer. exemple, Simone, numéro, 1 2 3 4 5"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-port-to-annuaire2"
+            answers:
+              - "{{person_name}} numéro {{add_numero_annuaire}}"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-port-to-annuaire2" 
+    signals:
+      - order: 
+          text: "ajoute {{person_name}} dans l'annuaire avec son numéro portable {{add_numero_annuaire}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "fix"
+          - "fixe"
+          stt-correction: 
+          - input: "de portable"
+            output: "portable"
+    neurons:
+      - todotxt:
+          action: "add"
+          todotxt_file: "Annuaire.txt"
+          project: "{{person_name}}"
+          priority: "P"
+          # complete: True
+          context: "{{add_numero_annuaire}}"
+          content: "{{add_numero_annuaire}}"
+          say_template: "J'ai ajouté le numéro portable {{added_task.task}}"
+      - todotxt:
+          action: "add"
+          todotxt_file: "Annuaire.txt"
+          project: "annuaire"
+          content: "{{person_name}}"
+          context: "{{person_name}}"
+          say_template: "au contact {{person_name}}"
+
+# ------------------------- ADD NEW NUMBER --------------
+  - name: "add-number-to-person"
+    signals:
+      - order: 
+          text: "ajoute un numéro"
+          matching-type: "not-contain"
+          excluded-words:
+            - "fix"
+            - "fixe"
+            - "portable"
+            - "à"
+          stt-correction: 
+            - input: "ajouter"
+              output: "ajoute"
+            - input: "le"
+              output: "un"
+    neurons:
+      - say:
+          message: "Fixe ou portable ?"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-fix-to-person"
+            answers:
+              - "fix"
+              - "fixe"
+          - synapse: "add-port-to-person"
+            answers:
+              - "portable"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-fix-to-person"
+    signals:
+      - order: "no-order-for-this-synapse"
+    neurons:
+      - say:
+          message: "dite le nom, numéro, et le numéro à enregistrer. exemple, Simone numéro 1 2 3 4 5"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-fix-to-person2"
+            answers:
+              - "{{person_name}} numéro {{add_numero_annuaire}}"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-fix-to-person2" 
+    signals:
+      - order: 
+          text: "ajoute le numéro fix {{add_numero_annuaire}} a {{person_name}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "portable"
+          stt-correction: 
+          - input: "à"
+            output: "a"
+          - input: "fixe"
+            output: "fix"
+    neurons:
+      - todotxt:
+          action: "add"
+          todotxt_file: "Annuaire.txt"
+          project: "{{person_name}}"
+          priority: "F"
+          context: "{{add_numero_annuaire}}"
+          content: "{{add_numero_annuaire}}"
+          say_template: "J'ai ajouté le numéro fixe {{added_task.task}} à {{person_name}}"
+
+  - name: "add-port-to-person"
+    signals:
+      - order: "no-order-for-this-synapse"
+    neurons:
+      - say:
+          message: "dite le nom, numéro, et le numéro à enregistrer. exemple, Simone numéro 1 2 3 4 5"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-port-to-person2"
+            answers:
+              - "{{person_name}} numéro {{add_numero_annuaire}}"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-port-to-person2" 
+    signals:
+      - order: 
+          text: "ajoute le numéro portable {{add_numero_annuaire}} a {{person_name}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "fix"
+          - "fixe"
+          stt-correction: 
+          - input: "à"
+            output: "a"
+    neurons:
+      - todotxt:
+          action: "add"
+          todotxt_file: "Annuaire.txt"
+          project: "{{person_name}}"
+          priority: "P"
+          context: "{{add_numero_annuaire}}"
+          content: "{{add_numero_annuaire}}"
+          say_template: "J'ai ajouté le numéro portable {{added_task.task}} à {{person_name}}"
+
+# ------------------------- ADD BIRTHDAY/ADDRESS --------------
+  - name: "add-info-to-person"
+    signals:
+      - order: 
+          text: "ajoute 1 information"
+          matching-type: "not-contain"
+          excluded-words:
+            - "fix"
+            - "fixe"
+            - "portable"
+            - "à"
+            - "numero"
+            - "numéro"
+          stt-correction: 
+            - input: "ajouter"
+              output: "ajoute"
+            - input: "une"
+              output: "1"
+    neurons:
+      - say:
+          message: "date de naissance ou addresse ?"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-birth-to-person"
+            answers:
+              - "date de naissance"
+          - synapse: "add-addres-to-person"
+            answers:
+              - "addresse"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-birth-to-person"
+    signals:
+      - order: "no-order-for-this-synapse"
+    neurons:
+      - say:
+          message: "dite le nom, et la date de naissance à enregistrer. exemple, Patrice jour 11 mois 06 année 1950"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-birth-to-person2"
+            answers:
+              - "{{person_name}} jour {{add_day}} mois {{add_month}} année {{add_year}}"
+              - "{{person_name}} jour {{add_day}} moi {{add_month}} année {{add_year}}"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-birth-to-person2" 
+    signals:
+      - order: 
+          text: "ajoute la date d'anniversaire jour {{add_day}} moi {{add_month}} année {{add_year}} a {{person_name}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "portable"
+          stt-correction: 
+          - input: "à"
+            output: "a"
+          - input: "mois"
+            output: "moi"
+          - input: "janvier"
+            output: "01"
+          - input: "février"
+            output: "02"
+          - input: "mars"
+            output: "03"
+          - input: "avril"
+            output: "04"
+          - input: "mai"
+            output: "05"
+          - input: "juin"
+            output: "06"
+          - input: "juillet"
+            output: "07"
+          - input: "aout"
+            output: "08"
+          - input: "septembre"
+            output: "09"
+          - input: "octobre"
+            output: "10"
+          - input: "novembre"
+            output: "11"
+          - input: "décembre"
+            output: "12"
+    neurons:
+      - todotxt:
+          action: "add"
+          todotxt_file: "Annuaire.txt"
+          project: "{{person_name}}"
+          priority: "B"
+          due_date_year: "{{add_year}}"
+          due_date_month: "{{add_month}}"
+          due_date_day: "{{add_day}}"
+          content: "{{add_year}}-{{add_month}}-{{add_day}}"
+          file_template: "templates/fr_annuaire_add_birth.j2"
+
+  - name: "add-addres-to-person"
+    signals:
+      - order: "no-order-for-this-synapse"
+    neurons:
+      - say:
+          message: "dite le nom, adresse, et l'adresse à enregistrer. Exemple, Simone adresse 3 rue de Paris 39 200 Moré"
+      - neurotransmitter:
+          from_answer_link:
+          - synapse: "add-addres-to-person2"
+            answers:
+              - "{{person_name}} adresse {{add_addresse}}"
+          - synapse: "stopaddannuaire"
+            answers:
+              - "non"
+              - "annule"
+              - "annuler"
+              - "annulé"
+              - "oublie"
+              - "cancel"
+              - "stop"
+          default: "canceladdannuaire"
+
+  - name: "add-addres-to-person2" 
+    signals:
+      - order: 
+          text: "ajoute l'adresse {{add_addresse}} a {{person_name}}"
+          matching-type: "not-contain"
+          excluded-words:
+          - "fix"
+          - "fixe"
+          stt-correction: 
+          - input: "à"
+            output: "a"
+    neurons:
+      - todotxt:
+          action: "add"
+          todotxt_file: "Annuaire.txt"
+          project: "{{person_name}}"
+          priority: "A"
+          context: "{{add_addresse}}"
+          content: "{{add_addresse}}"
+          say_template: "J'ai ajouté l'adresse {{added_task.task}}"
+
+
+# ------------------------- DEL NAME/NUMBER --------------
+  - name: "delete-person-annuaire"
+    signals:
+      - order: 
+          text: "supprime {{content}} de l'annuaire"
+          matching-type: "not-contain"
+          excluded-words:
+            - "toute"
+            - "tout"
+          stt-correction: 
+          - input: "supprimé"
+            output: "supprime"
+          - input: "supprimer"
+            output: "supprime"
+      - order: 
+          text: "efface {{content}} de l'annuaire"
+          matching-type: "not-contain"
+          excluded-words:
+            - "toute"
+            - "tout"
+          stt-correction: 
+          - input: "effacé"
+            output: "efface"
+          - input: "effacer"
+            output: "efface"
+    neurons:
+      - todotxt:
+          action: "del"
+          todotxt_file: "Annuaire.txt"
+          project: "{{content}}"
+          file_template: "templates/fr_del_annuaire_0.j2"
+      - todotxt:
+          action: "del"
+          todotxt_file: "Annuaire.txt"
+          project: "annuaire"
+          context: "{{content}}"
+          file_template: "templates/fr_del_annuaire_2.j2"
+    

@@ -1,0 +1,12 @@
+{% if count > 0 %}
+    {% if count > 1 %}
+        Vos adresses :
+    {% else %}
+        Votre adresse :
+    {% endif %}
+    {% for task in task_list %}
+        {{ task.text }}
+    {% endfor %}
+{% else %}
+    Il n'y a pas d'adresse
+{% endif %}

@@ -1,0 +1,8 @@
+{% if count > 0 %}
+    vous avez {{count}} anniversaires
+    {% for task in task_list %}
+        {{ task.projects }} le {{ task.due_date_day }} {{ task.due_date_month | replace("01","janvier") | replace("02","février") | replace("03","mars") | replace("04","avril") | replace("05","mai") | replace("06","juin") | replace("07","juillet") | replace("08","out") | replace("09","septembre") | replace("10","octobre") | replace("11","novembre") | replace("12","décembre") }}
+    {% endfor %}
+{% else %}
+    Il n'y a pas d'anniversaire
+{% endif %}
