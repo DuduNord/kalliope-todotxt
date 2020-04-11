@@ -611,7 +611,7 @@
           due_date_year: "{{add_year}}"
           due_date_month: "{{add_month}}"
           due_date_day: "{{add_day}}"
-          content: "{{add_year}}-{{add_month}}-{{add_day}}"
+          content: "{{add_year}}-{{add_month}}-{{add_day}}"   # attention, joindre les dates avec "-" fait que TODOTXT le prend comme une date de création. mais la date de création n'est pas prise en compte. Si nécessaire séparer les infos par "/" plutôt que "-"
           file_template: "templates/fr_annuaire_add_birth.j2"
 
   - name: "add-addres-to-person"
