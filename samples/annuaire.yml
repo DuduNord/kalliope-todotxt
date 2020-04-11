@@ -1,6 +1,13 @@
-# recherche de tous les anniversaires dans le mois ?
-# l'ajout d'une date de naissance ne fonctionne pas, car la date complète est prise pour un seul paramètre
-# commande "ajoute la date d'anniversaire 16 décembre 1981 a florian" donne dans la console "replacing brackets from {{add_year}}, using {'add_day': '16 12 1981 a florian', 'person_name': '',"
+# pour avoir simplement la liste de toutes les personnes dans l'annuaire, une tache est ajoutée par personnes
+# PROJET = annuaire > donne la liste des personnes enregitrées, avec en context le même nom. Normalement les espaces sont rempalcés
+# par "_" dans le context et dans le projet, pour que la recherche en tienne compte. le "_" est normalement re-remplacé par un espace
+# lors de l'action 'GET'
+# Pour le reste, la lettre de priorité trie les infos : 'P' pour portable 'F'pour fixe 'B' pour anniversaire, 'A' pour adresse
+# Pour facilite le maniement des dates de due date, j'ai fait le choix de remonter indépendamment l'année, le jour et le mois, plutôt
+# que la due date au format "YYYY-MM-DD". Les templates gèrent donc le tout
+# Souci: l'action GET retourne les projets et context entouré par [' et '], je ne sais pas pourquoi. 
+# Souci: le template "get all info" doit trier les numéros des anniversaires et des adresse. Mais il affiche "NONE" avant de donner les
+# infos. Je suspecte que les boucles FOR pour le tri les affichent, mais je ne sais pas comment les supprimer...
 # ------------------------- AIDE -------------------------
   - name: "aide-annuaire"
     signals:
