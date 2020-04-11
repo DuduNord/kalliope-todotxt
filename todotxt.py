@@ -1,8 +1,20 @@
+# note : initial TODOTXT had an issue when CONTEXT or PROJECT has a whitespace > if it save CONTEXT/PROJECT with the whitesace, when parsing the line for GET will split PROJECT
+# or CONTEXT will add the seond portion of the PROJECT/CONTECT as the task name
+# exemple : if context is "nice job" with task "waht a", initial TODOTXT will save it : what a @nice job. then when it will get the line, it will give : CONTEXT = nice and task = what a job
+# to avoid this, this TODOTXT will replace all whitespace in CONTEXT/PROJECT by "_" when saving and replace back the "_" to " " to be transparent. See REPLACE function at the end of the file 
+# also to get an easier due-date incorporation, ask the 3 parameters year/month/date independantly, to be able to use STT corrections
+# this PY file does consider that there is only one due date per task (limited by the test in _get_passed_due_tasks)
+# side note : it seems that the neuron does not remove a completed task if the parameter COMPLETE is not set to True
+# changed the initial TODOTXT and assume that there is one project and one context only per task to work properly. if there is more than one
+# context or project, this code may not work properly.
+# last point, the code does report as a task list a project with "['" before and "']" after. If someone does know how to fix this...
 import logging
 import re
 import os.path
+import datetime
 
 from kalliope.core.NeuronModule import NeuronModule, InvalidParameterException
+from datetime import timedelta
 
 logging.basicConfig()
 logger = logging.getLogger("kalliope")
@@ -18,12 +30,20 @@ class Todotxt (NeuronModule):
             'project': kwargs.get('project', None),
             'context': kwargs.get('context', None),
             'complete': kwargs.get('complete', False),
+            'due_date_year': kwargs.get('due_date_year', None),
+            'due_date_month': kwargs.get('due_date_month', None),
+            'due_date_day': kwargs.get('due_date_day', None),
+            'passed_due_days': kwargs.get('passed_due_days', None), # the delay in days to get the passed due actions from "now", can be positive OR negative
             'content': kwargs.get('content', None)
         }
 
         if self._is_parameters_ok():
             if self.configuration['action'] == "get":
                 task_list = self._action_get()
+                self.say({'action': self.configuration['action'], 'task_list': task_list, 'count': len(task_list)})
+
+            elif self.configuration['action'] == "get-passed-due":
+                task_list = self._action_get_passed_due()
                 self.say({'action': self.configuration['action'], 'task_list': task_list, 'count': len(task_list)})
 
             elif self.configuration['action'] == "add":
@@ -45,6 +65,9 @@ class Todotxt (NeuronModule):
                                 priority = self.configuration['priority'],
                                 project = self.configuration['project'],
                                 context = self.configuration['context'],
+                                due_date_year = self.configuration['due_date_year'],
+                                due_date_month = self.configuration['due_date_month'],
+                                due_date_day = self.configuration['due_date_day'],
                                 complete = self.configuration['complete'])
 
         task_list = []
@@ -54,6 +77,45 @@ class Todotxt (NeuronModule):
                 'priority': t.priority,
                 'complete': t.complete,
                 'contexts': t.context,
+                'due_date_year': t.due_date_year,
+                'due_date_month': t.due_date_month,
+                'due_date_day': t.due_date_day,
+                'projects': t.project,
+            })
+
+        return task_list
+
+    def _action_get_passed_due(self):
+        # Parse file and get list of tasks, the passed date represent the end of the due date range (from now to this date)
+        # A FaIRE / besoin de passer la date min et la date max
+        if int(self.configuration['passed_due_days']) >= 0:
+            newdatemax = datetime.date.today() + datetime.timedelta(days = int(self.configuration['passed_due_days']))
+            newdatemin = datetime.date.today()
+        else:
+            newdatemin = datetime.date.today() + datetime.timedelta(days=int(self.configuration['passed_due_days']))
+            newdatemax = datetime.date.today()
+        tasks = self._get_passed_due_tasks(self._parse_todotxt(self.configuration['todotxt_file']),
+                                priority = self.configuration['priority'],
+                                project = self.configuration['project'],
+                                context = self.configuration['context'],
+                                due_date_year_min = newdatemin.strftime("%Y"),
+                                due_date_month_min = newdatemin.strftime("%m"),
+                                due_date_day_max = newdatemin.strftime("%d"),
+                                due_date_year_max = newdatemax.strftime("%Y"),
+                                due_date_month_max = newdatemax.strftime("%m"),
+                                due_date_day_min = newdatemax.strftime("%d"),
+                                complete = self.configuration['complete'])
+
+        task_list = []
+        for t in tasks:
+            task_list.append({
+                'text': t.task,
+                'priority': t.priority,
+                'complete': t.complete,
+                'contexts': t.context,
+                'due_date_year': t.due_date_year,
+                'due_date_month': t.due_date_month,
+                'due_date_day': t.due_date_day,
                 'projects': t.project,
             })
 
@@ -66,6 +128,10 @@ class Todotxt (NeuronModule):
             task.project.append(self.configuration['project'])
         if self.configuration['context'] is not None:
             task.context.append(self.configuration['context'])
+        if ((self.configuration['due_date_year'] is not None) and (self.configuration['due_date_month'] is not None) and (self.configuration['due_date_day'] is not None)):
+            task.due_date_month = self.configuration['due_date_month']
+            task.due_date_year = self.configuration['due_date_year']
+            task.due_date_day = self.configuration['due_date_day']
         task.complete = self.configuration['complete']
         task.task = self.configuration['content']
         task.encode(task.task)
@@ -84,6 +150,9 @@ class Todotxt (NeuronModule):
                                           priority = self.configuration['priority'],
                                           project = self.configuration['project'],
                                           context = self.configuration['context'],
+                                          due_date_year = self.configuration['due_date_year'],
+                                          due_date_month = self.configuration['due_date_month'],
+                                          due_date_day = self.configuration['due_date_day'],
                                           complete = self.configuration['complete'])
         
         # Create final list of task to rewrite file
@@ -106,6 +175,7 @@ class Todotxt (NeuronModule):
         :return: True if parameters are ok, raise an exception otherwise.
         .. raises:: MissingParameterException
         """
+
         if self.configuration['todotxt_file'] is None \
             or os.path.isfile(self.configuration['todotxt_file']) is False:
             raise InvalidParameterException("Todotxt need a valid and existing todo file")
@@ -115,6 +185,9 @@ class Todotxt (NeuronModule):
 
         if self.configuration['action'] == "add" and self.configuration['content'] is None:
             raise InvalidParameterException("A content is required when the action is add")
+
+        if self.configuration['action'] == "get-passed-due" and self.configuration['passed_due_days'] is None:
+            raise InvalidParameterException("A delay in day is required when the action is get-passed-due")
 
         return True
  
@@ -142,14 +215,35 @@ class Todotxt (NeuronModule):
 
         return tasks
 
-    def _get_tasks(self, tasks, project = None, context = None, priority = None, complete=None):
+    def _get_tasks(self, tasks, project = None, context = None, priority = None, complete=None, due_date_year=None, due_date_month=None, due_date_day=None):
         valid_tasks = []
         for t in tasks:
             if (project is None or project in t.project) \
                and (context is None or context in t.context) \
+               and (due_date_year is None or due_date_year in t.due_date_year) \
+               and (due_date_month is None or due_date_month in t.due_date_month) \
+               and (due_date_day is None or due_date_day in t.due_date_day) \
+               and (priority is None or priority == t.priority) \
                and (complete is None or complete == t.complete):
                valid_tasks.append(t)
 
+        return valid_tasks
+
+    def _get_passed_due_tasks(self, tasks, priority = None, project = None, context = None, due_date_month_min=None, due_date_day_min=None, due_date_year_min=None, due_date_day_max=None,due_date_month_max=None, due_date_year_max=None, complete=None):
+        limit_min = datetime.datetime.strptime(due_date_year_min+"-"+due_date_month_min+"-"+due_date_day_min,"%Y-%m-%d")
+        limit_max = datetime.datetime.strptime(due_date_year_max+"-"+due_date_month_max+"-"+due_date_day_max,"%Y-%m-%d")
+        valid_tasks = []
+        for t in tasks:
+            if t.due_date_year is not None and t.due_date_month is not None and t.due_date_day is not None:
+                parsed_date1 = datetime.datetime.strptime(due_date_year_max+"-"+t.due_date_month+"-"+t.due_date_day,"%Y-%m-%d")
+                parsed_date2 = datetime.datetime.strptime(due_date_year_min+"-"+t.due_date_month+"-"+t.due_date_day,"%Y-%m-%d")
+                if (project is None or project in t.project) \
+                    and (context is None or context in t.context) \
+                    and     ((parsed_date1 >= limit_min and parsed_date1 <= limit_max) \
+                        or   (parsed_date2 >= limit_min and parsed_date2 <= limit_max)) \
+                    and (priority is None or priority == t.priority) \
+                    and (complete is None or complete == t.complete):
+                    valid_tasks.append(t)
         return valid_tasks
 
 # Code greatly inspired from https://github.com/dirkolbrich/todotxt/blob/master/todotxt/task.py
@@ -157,6 +251,9 @@ class Task (object):
     '''A single Task object.'''
 
     _DATE_REGEX = r'\d{4}-[0-1]\d-[0-3]\d'
+    _YEAR_REGEX = r'\d{4}\d'
+    _DAY_REGEX = r'\d[0-3]\d'
+    _MONTH_REGEX = r'\d[0-1]\d'
     _PRIORITY_REGEX = r'(?P<priority>^\([A-Z]\))'
     _PROJECT_REGEX = r'(?P<project>[+][^\s]+)'
     _CONTEXT_REGEX = r'(?P<context>@[^\s]+)'
@@ -175,7 +272,9 @@ class Task (object):
         self.creation_date = None
         self.complete = False
         self.completion_date = None
-        self.due_date = None
+        self.due_date_year = None
+        self.due_date_month = None
+        self.due_date_day = None
 
         self.decode(self.raw)
 
@@ -196,7 +295,7 @@ class Task (object):
             if re.search(self._PRIORITY_REGEX, part) is None \
                 and re.search(self._COMPLETED_REGEX, part) is None \
                 and re.search(self._PROJECT_REGEX, part) is None \
-                and re.search(self._PRIORITY_REGEX, part) is None \
+                and re.search(self._DUE_DATE_REGEX, part) is None \
                 and re.search(self._DATE_REGEX, part) is None \
                 and re.search(self._CONTEXT_REGEX, part) is None:
                 tmp.append(part)
@@ -237,17 +336,22 @@ class Task (object):
         if len(part) > 1:
             # parse for project
             if part.startswith('+'):
-                self.project.append(part[1:])
+                self.project.append(part[1:].replace("_"," "))
             # parse for context
             elif part.startswith('@'):
-                self.context.append(part[1:])
+                self.context.append(part[1:].replace("_"," "))
             # parse for due date
             elif part.startswith('due:'):
-                self.due_date = part[4:]
+                self.due_date_year = part[4:8]
+                self.due_date_month = part[9:11]
+                self.due_date_day = part[12:14]
 
     def encode(self, content):
         '''Encode the Task object to a raw text line for todo.txt'''
         raw = ""
+        if self.complete:
+            raw += "x "
+
         if self.priority:
             raw += "(" + self.priority + ") "
 
@@ -255,10 +359,14 @@ class Task (object):
 
         for c in self.context:
             logger.debug(c)
-            raw += "@" + c + " "
+            raw += "@" + c.replace(" ","_") + " "
 
         for p in self.project:
-            raw += "+" + p + " "
+            raw += "+" + p.replace(" ","_") + " "
+
+        if self.due_date_year is not None:
+            # for d in self.due_date:
+            raw += "due:" + self.due_date_year + "-" + self.due_date_month + "-" + self.due_date_day + " "
 
         self.raw = raw
 
