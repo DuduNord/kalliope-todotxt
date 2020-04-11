@@ -4,10 +4,7 @@
 # to avoid this, this TODOTXT will replace all whitespace in CONTEXT/PROJECT by "_" when saving and replace back the "_" to " " to be transparent. See REPLACE function at the end of the file 
 # also to get an easier due-date incorporation, ask the 3 parameters year/month/date independantly, to be able to use STT corrections
 # this PY file does consider that there is only one due date per task (limited by the test in _get_passed_due_tasks)
-# side note : it seems that the neuron does not remove a completed task if the parameter COMPLETE is not set to True
-# changed the initial TODOTXT and assume that there is one project and one context only per task to work properly. if there is more than one
-# context or project, this code may not work properly.
-# last point, the code does report as a task list a project with "['" before and "']" after. If someone does know how to fix this...
+# side note : it seems that the neuron does not remove a completed task if the parameter COMPLETE is not et to True
 import logging
 import re
 import os.path
@@ -87,23 +84,27 @@ class Todotxt (NeuronModule):
 
     def _action_get_passed_due(self):
         # Parse file and get list of tasks, the passed date represent the end of the due date range (from now to this date)
-        # A FaIRE / besoin de passer la date min et la date max
         if int(self.configuration['passed_due_days']) >= 0:
             newdatemax = datetime.date.today() + datetime.timedelta(days = int(self.configuration['passed_due_days']))
             newdatemin = datetime.date.today()
+            # newdatemax = datetime.datetime.strptime("2019-12-20","%Y-%m-%d") + datetime.timedelta(days = int(self.configuration['passed_due_days']))
+            # newdatemin = datetime.datetime.strptime("2019-12-20","%Y-%m-%d")
         else:
             newdatemin = datetime.date.today() + datetime.timedelta(days=int(self.configuration['passed_due_days']))
             newdatemax = datetime.date.today()
+            # newdatemin = datetime.datetime.strptime("2019-12-20","%Y-%m-%d") + datetime.timedelta(days=int(self.configuration['passed_due_days']))
+            # newdatemax = datetime.datetime.strptime("2019-12-20","%Y-%m-%d")
+        logger.debug('todofile:1-range %s to %s' % (newdatemin.strftime("%d-%m-%Y"), newdatemax.strftime("%d-%m-%Y")))
         tasks = self._get_passed_due_tasks(self._parse_todotxt(self.configuration['todotxt_file']),
                                 priority = self.configuration['priority'],
                                 project = self.configuration['project'],
                                 context = self.configuration['context'],
                                 due_date_year_min = newdatemin.strftime("%Y"),
                                 due_date_month_min = newdatemin.strftime("%m"),
-                                due_date_day_max = newdatemin.strftime("%d"),
+                                due_date_day_min = newdatemin.strftime("%d"),
                                 due_date_year_max = newdatemax.strftime("%Y"),
                                 due_date_month_max = newdatemax.strftime("%m"),
-                                due_date_day_min = newdatemax.strftime("%d"),
+                                due_date_day_max = newdatemax.strftime("%d"),
                                 complete = self.configuration['complete'])
 
         task_list = []
@@ -232,6 +233,7 @@ class Todotxt (NeuronModule):
     def _get_passed_due_tasks(self, tasks, priority = None, project = None, context = None, due_date_month_min=None, due_date_day_min=None, due_date_year_min=None, due_date_day_max=None,due_date_month_max=None, due_date_year_max=None, complete=None):
         limit_min = datetime.datetime.strptime(due_date_year_min+"-"+due_date_month_min+"-"+due_date_day_min,"%Y-%m-%d")
         limit_max = datetime.datetime.strptime(due_date_year_max+"-"+due_date_month_max+"-"+due_date_day_max,"%Y-%m-%d")
+        # logger.debug('todofile:2-range %s to %s' % (limit_min.strftime("%d-%m-%Y"), limit_max.strftime("%d-%m-%Y")))
         valid_tasks = []
         for t in tasks:
             if t.due_date_year is not None and t.due_date_month is not None and t.due_date_day is not None:
@@ -358,7 +360,7 @@ class Task (object):
         raw += self.task + " "
 
         for c in self.context:
-            logger.debug(c)
+            # logger.debug(c)
             raw += "@" + c.replace(" ","_") + " "
 
         for p in self.project:
@@ -369,4 +371,3 @@ class Task (object):
             raw += "due:" + self.due_date_year + "-" + self.due_date_month + "-" + self.due_date_day + " "
 
         self.raw = raw
-
